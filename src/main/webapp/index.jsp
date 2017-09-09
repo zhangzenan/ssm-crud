@@ -59,57 +59,35 @@ http://localhost:3306/ssm-crud
 				
 			</div>
 			<!-- 分页条信息 -->
-			<div class="col-md-6">
-				<nav aria-label="Page navigation">
-				  <ul class="pagination">
-				  	<li><a href="${APP_PATH }/emps?pn=1">首页</a></li>
-				  	<c:if test="${pageInfo.hasPreviousPage }">
-				  		<li>				    
-					      <a href="${APP_PATH }/emps?pn=${pageInfo.pageNum-1 }" aria-label="Previous">
-					        <span aria-hidden="true">&laquo;</span>
-					      </a>
-					    </li>
-				  	</c:if>
-				  					    
-				    <c:forEach items="${pageInfo.navigatepageNums }" var="page_Num">
-				    	<c:if test="${page_Num==pageInfo.pageNum }">
-				    		<li class="active"><a href="#">${page_Num }</a></li>	
-				    	</c:if>
-				    	<c:if test="${page_Num!=pageInfo.pageNum }">
-				    		<li><a href="${APP_PATH }/emps?pn=${page_Num }">${page_Num }</a></li>	
-				    	</c:if>				    	
-				    </c:forEach>    
-				   
-				   <c:if test="${pageInfo.hasNextPage }">
-				     <li>
-				      <a href="${APP_PATH }/emps?pn=${pageInfo.pageNum+1 }" aria-label="Next">
-				        <span aria-hidden="true">&raquo;</span>
-				      </a>
-				    </li>
-				   </c:if>
-				  <li><a href="${APP_PATH }/emps?pn=${pageInfo.pages }">末页</a></li>
-				  </ul>
-				</nav>
+			<div class="col-md-6" id="page_nav_area">
+			
 			</div>
 		</div>
 	</div>
 	<script type="text/javascript">
 		//1、页面加载完成以后，直接去发送ajax请求，要到分页数据
 		$(function(){
+			to_page(1);
+		});
+		
+		function to_page(pn){
 			$.ajax({
 				url:"${APP_PATH}/emps",
-				data:"pn=1",
+				data:"pn="+pn,
 				type:"GET",
 				success:function(result){
 					build_emps_table(result);
 					
 					build_page_info(result);
+					
+					build_page_nav(result);
 				}
 			});
-		});
+		}
 			
 		//解析员工列表数据
 		function build_emps_table(result){
+			$("#emps_table tbody").empty();
 			var emps=result.extend.pageInfo.list;
 			$.each(emps,function(index,item){
 				var empIdTd=$("<td></td>").append(item.empId);
@@ -131,13 +109,64 @@ http://localhost:3306/ssm-crud
 		}
 		
 		//解析分页信息
-		function build_page_info(result){			
+		function build_page_info(result){		
+			$("#page_info_area").empty();
 			$("#page_info_area").append("当前"+result.extend.pageInfo.pageNum+"页,总"+result.extend.pageInfo.pages+"页，总"+result.extend.pageInfo.total+"条记录");			
 		}
 		
 		//解析显示分页条
-		function build_page_nav(){
+		function build_page_nav(result){
+			$("#page_nav_area").empty();
+			//page_nav_area
+			var ul=$("<ul></ul>").addClass("pagination");
+			var firstPageLi=$("<li></li>").append($("<a></a>").append("首页").attr("href","#"));
+			var prePageLi=$("<li></li>").append($("<a></a>").append("&laquo;"));
+			if(result.extend.pageInfo.hasPreviousPage==false){
+				firstPageLi.addClass("disabled");
+				prePageLi.addClass("disabled");
+			}
+			else{
+				firstPageLi.click(function(){
+					to_page(1);
+				});
+				prePageLi.click(function(){
+					to_page(result.extend.pageInfo.pageNum-1);
+				});
+			}	
 			
+			
+			var nextPageLi=$("<li></li>").append($("<a></a>").append("&raquo;").attr("href","#"));
+			var lastPageLi=$("<li></li>").append($("<a></a>").append("末页").attr("href","#"));
+			if(result.extend.pageInfo.hasNextPage==false){
+				nextPageLi.addClass("disabled");
+				lastPageLi.addClass("disabled");
+			}
+			else{
+				nextPageLi.click(function(){
+					to_page(result.extend.pageInfo.pageNum+1);
+				});
+				lastPageLi.click(function(){
+					to_page(result.extend.pageInfo.pages);
+				});
+			}			
+		
+			//添加首页和前一页
+			ul.append(firstPageLi).append(prePageLi);
+			$.each(result.extend.pageInfo.navigatepageNums,function(index,item){
+				var numLi=$("<li></li>").append($("<a></a>").append(item));
+				if(result.extend.pageInfo.pageNum==item){
+					numLi.addClass("active");
+				}
+				numLi.click(function(){
+					to_page(item);
+				});
+				ul.append(numLi);				
+			});
+			//添加下一页和末页
+			ul.append(nextPageLi).append(lastPageLi);
+			
+			var navEle=$("<nav></nav>").append(ul);
+			navEle.appendTo("#page_nav_area");			
 		}
 	</script>
 
