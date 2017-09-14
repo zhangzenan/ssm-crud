@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.atguigu.crud.bean.Employee;
+import com.atguigu.crud.bean.EmployeeExample;
+import com.atguigu.crud.bean.EmployeeExample.Criteria;
 import com.atguigu.crud.dao.EmployeeMapper;
 
 /** 
@@ -47,6 +49,45 @@ public class EmployeeService {
 	*/
 	public void saveEmp(Employee employee){
 		employeeMapper.insertSelective(employee);
+	}
+	
+	
+	/** 
+	* 按照员工Id查询员工信息
+	*/
+	public Employee getEmp(Integer id){
+		Employee employee= employeeMapper.selectByPrimaryKey(id);
+		return employee;
+	}
+
+
+	/** 
+	* 更新员工信息
+	*/
+	public void updateEmp(Employee employee) {
+		employeeMapper.updateByPrimaryKeySelective(employee);
+		
+	}
+
+
+	/** 
+	*删除员工
+	*/
+	public void deleteEmp(Integer id) {		
+		employeeMapper.deleteByPrimaryKey(id);
+	}
+
+
+	/** 
+	* 批量删除员工信息
+	*/
+	public void deleteBatch(List<Integer> del_ids) {
+		EmployeeExample example=new EmployeeExample();
+		Criteria criteria =example.createCriteria();
+		//delete from xxx where emp_id in (1,2,3)
+		criteria.andEmpIdIn(del_ids);
+		employeeMapper.deleteByExample(example);
+		
 	}
 
 }
